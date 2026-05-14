@@ -7,7 +7,7 @@
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body { background: #000; overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none; }
-canvas { display: block; position: absolute; top: 0; left: 0; }
+canvas { display: block; position: fixed; top: 0; left: 0; width: 100%; height: 100%; }
 #ui { position: absolute; top: 0; left: 0; width: 100%; pointer-events: none; }
 #overlay {
   position: absolute; top: 0; left: 0; width: 100%; height: 100%;
@@ -122,20 +122,20 @@ function genTextures() {
         const i = (y * TEX_W + x) * 4;
         let r, g, b;
         if (t === 0) { // Gray stone
-          const v = 100 + Math.random() * 40;
-          if ((x % 16 < 2) || (y % 16 < 2)) { r=g=b=60; }
+          const v = 140 + Math.random() * 40;
+          if ((x % 16 < 2) || (y % 16 < 2)) { r=g=b=80; }
           else { r=g=b=v; }
         } else if (t === 1) { // Red brick
-          if (y % 16 < 3) { r=80;g=40;b=30; }
-          else { r=160+Math.random()*30; g=60+Math.random()*20; b=40+Math.random()*15; }
+          if (y % 16 < 3) { r=100;g=50;b=40; }
+          else { r=180+Math.random()*30; g=70+Math.random()*25; b=50+Math.random()*20; }
         } else if (t === 2) { // Blue tech
-          r=40+Math.random()*20; g=60+Math.random()*30; b=140+Math.random()*40;
-          if ((x+y)%12 < 2) { r+=40;g+=40;b+=40; }
+          r=60+Math.random()*30; g=80+Math.random()*40; b=170+Math.random()*40;
+          if ((x+y)%12 < 2) { r+=50;g+=50;b+=50; }
         } else if (t === 3) { // Dark industrial
-          r=g=b=50+Math.random()*30;
-          if (x%20<2 || y%20<2) { r=g=b=30; }
+          r=g=b=70+Math.random()*40;
+          if (x%20<2 || y%20<2) { r=g=b=45; }
         } else if (t === 4) { // Special/exit
-          r=180+Math.random()*40; g=140+Math.random()*30; b=40+Math.random()*20;
+          r=200+Math.random()*40; g=160+Math.random()*30; b=50+Math.random()*30;
           if ((x+y)%10 < 2) { r=g=b=255; }
         }
         img.data[i]=r; img.data[i+1]=g; img.data[i+2]=b; img.data[i+3]=255;
@@ -241,7 +241,7 @@ const levels = [
       [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
     ],
     enemies: [
-      {x:4.5, y:4.5, type:0, hp:40},
+      {x:4.5, y:2.5, type:0, hp:40},
       {x:16.5, y:6.5, type:0, hp:40},
       {x:10.5, y:10.5, type:1, hp:60},
       {x:6.5, y:14.5, type:0, hp:40},
@@ -253,7 +253,7 @@ const levels = [
       {x:3.5, y:14.5, type:'ammo'},
       {x:16.5, y:14.5, type:'health'},
     ],
-    playerStart: {x:2, y:2, angle:0},
+    playerStart: {x:4, y:3.5, angle:Math.PI/2},
   },
   { // Level 2 - Enemy Base
     map: [
@@ -500,11 +500,13 @@ function castRays() {
     const texCanvas = textures[Math.min(texId, textures.length - 1)];
     const texCtx = texCanvas.getContext('2d');
 
-    // Draw ceiling
-    ctx.fillStyle = '#1a1a2e';
+    // Draw ceiling (sky gradient)
+    const skyGrad = drawStart / H;
+    const cr = Math.floor(50 + skyGrad * 60), cg = Math.floor(50 + skyGrad * 60), cb = Math.floor(80 + skyGrad * 40);
+    ctx.fillStyle = `rgb(${cr},${cg},${cb})`;
     ctx.fillRect(x, 0, 1, drawStart);
     // Draw floor
-    ctx.fillStyle = '#2a2a1a';
+    ctx.fillStyle = '#4a3a2a';
     ctx.fillRect(x, drawEnd, 1, H - drawEnd);
 
     // Draw textured wall slice
@@ -521,7 +523,7 @@ function castRays() {
         let b = imgData.data[pixelIdx + 2];
         // Darken based on side and distance
         const shade = side === 1 ? 0.7 : 1;
-        const distFade = Math.min(1, 3 / perpDist);
+        const distFade = Math.min(1, 6 / (perpDist + 2));
         r = Math.floor(r * shade * distFade);
         g = Math.floor(g * shade * distFade);
         b = Math.floor(b * shade * distFade);
@@ -619,7 +621,7 @@ function renderSprites() {
           }
 
           // Distance fade
-          const fade = Math.min(1, 4 / sprite.dist);
+          const fade = Math.min(1, 6 / (sprite.dist + 2));
           r = Math.floor(r * fade);
           g = Math.floor(g * fade);
           b = Math.floor(b * fade);
