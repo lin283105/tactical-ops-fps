@@ -443,7 +443,7 @@ function renderSprites() {
       if (texX < 0 || texX >= SPR_W) continue;
 
       for (let y = drawStartY; y < drawEndY; y++) {
-        const texY = ((y - halfH + halfSH) * SPR_H / spriteH) | 0;
+        const texY = ((y - drawStartY) * SPR_H / spriteH) | 0;
         if (texY < 0 || texY >= SPR_H) continue;
         const pi = (texY * SPR_W + texX) << 2;
         if (pixels[pi + 3] < 128) continue;
