@@ -181,12 +181,12 @@ const levels = [
       [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
     ],
     enemies: [
-      {x:4.5,y:2.5,type:0,hp:40},{x:16.5,y:6.5,type:0,hp:40},{x:10.5,y:10.5,type:1,hp:60},{x:6.5,y:14.5,type:0,hp:40},{x:16.5,y:17.5,type:1,hp:60},
+      {x:4,y:6.5,type:0,hp:40},{x:16.5,y:6.5,type:0,hp:40},{x:10.5,y:10.5,type:1,hp:60},{x:6.5,y:14.5,type:0,hp:40},{x:16.5,y:17.5,type:1,hp:60},
     ],
     pickups: [
       {x:8.5,y:2.5,type:'health'},{x:12.5,y:8.5,type:'ammo'},{x:3.5,y:14.5,type:'ammo'},{x:16.5,y:14.5,type:'health'},
     ],
-    playerStart: {x:4, y:3.5, angle:Math.PI/2},
+    playerStart: {x:4, y:4.2, angle:Math.PI/2},
   },
   {
     map: [
@@ -212,7 +212,7 @@ const levels = [
       [3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3],
     ],
     enemies: [
-      {x:6.5,y:2.5,type:0,hp:40},{x:13.5,y:2.5,type:0,hp:40},{x:4.5,y:4.5,type:1,hp:60},{x:11.5,y:7.5,type:1,hp:60},{x:17.5,y:7.5,type:1,hp:60},{x:8.5,y:12.5,type:0,hp:40},{x:16.5,y:16.5,type:1,hp:70},{x:17.5,y:16.5,type:1,hp:70},
+      {x:6.5,y:2.5,type:0,hp:40},{x:13.5,y:2.5,type:0,hp:40},{x:4.5,y:8.5,type:1,hp:60},{x:11.5,y:7.5,type:1,hp:60},{x:17.5,y:7.5,type:1,hp:60},{x:8.5,y:12.5,type:0,hp:40},{x:16.5,y:16.5,type:1,hp:70},{x:17.5,y:16.5,type:1,hp:70},
     ],
     pickups: [
       {x:12.5,y:3.5,type:'health'},{x:3.5,y:8.5,type:'ammo'},{x:17.5,y:5.5,type:'ammo'},{x:10.5,y:11.5,type:'health'},{x:4.5,y:15.5,type:'ammo'},
@@ -224,7 +224,7 @@ const levels = [
 // ==================== GAME STATE ====================
 let player, enemies, pickups, currentMap, currentLevel;
 let keys = {};
-let mouseDX = 0;
+let mouseDX = 0, mouseDY = 0;
 let gameRunning = false, gameOver = false, victory = false;
 let muzzleFlash = 0, damageFlash = 0;
 let killCount = 0, totalScore = 0;
@@ -241,7 +241,7 @@ function initLevel(lvl) {
   player = {
     x: levels[lvl].playerStart.x, y: levels[lvl].playerStart.y,
     angle: levels[lvl].playerStart.angle,
-    health: 100, maxHealth: 100, ammo: 15, maxAmmo: 30, score: totalScore,
+    health: 100, maxHealth: 100, ammo: 15, maxAmmo: 30, score: totalScore, pitch: 0,
   };
   enemies = levels[lvl].enemies.map(e => ({
     x: e.x, y: e.y, type: e.type, hp: e.hp, maxHp: e.hp,
@@ -268,7 +268,7 @@ function startGame() {
 // ==================== INPUT ====================
 window.addEventListener('keydown', e => { keys[e.key.toLowerCase()] = true; });
 window.addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
-window.addEventListener('mousemove', e => { if (document.pointerLockElement === canvas) mouseDX += e.movementX; });
+window.addEventListener('mousemove', e => { if (document.pointerLockElement === canvas) { mouseDX += e.movementX; mouseDY += e.movementY; } });
 canvas.addEventListener('click', () => { if (gameRunning && !gameOver && !victory) canvas.requestPointerLock(); });
 canvas.addEventListener('mousedown', e => {
   if (e.button === 0 && gameRunning && !gameOver && !victory && document.pointerLockElement === canvas) shoot();
@@ -337,8 +337,9 @@ function castRays() {
     zBuffer[x] = perpDist;
 
     const lineH = (H / perpDist) | 0;
-    let drawStart = ((-lineH >> 1) + (H >> 1)) | 0;
-    let drawEnd = ((lineH >> 1) + (H >> 1)) | 0;
+    const pitchOffset = (player.pitch * H * 0.55) | 0;
+    let drawStart = ((-lineH >> 1) + (H >> 1) + pitchOffset) | 0;
+    let drawEnd = ((lineH >> 1) + (H >> 1) + pitchOffset) | 0;
     if (drawStart < 0) drawStart = 0;
     if (drawEnd >= H) drawEnd = H - 1;
 
@@ -423,8 +424,9 @@ function renderSprites() {
     const spriteW = spriteH;
     const halfSW = spriteW >> 1, halfSH = spriteH >> 1;
 
-    let drawStartY = halfH - halfSH; if (drawStartY < 0) drawStartY = 0;
-    let drawEndY = halfH + halfSH; if (drawEndY >= H) drawEndY = H - 1;
+    const pOff = (player.pitch * H * 0.55) | 0;
+    let drawStartY = halfH - halfSH + pOff; if (drawStartY < 0) drawStartY = 0;
+    let drawEndY = halfH + halfSH + pOff; if (drawEndY >= H) drawEndY = H - 1;
     let drawStartX = spriteScreenX - halfSW; if (drawStartX < 0) drawStartX = 0;
     let drawEndX = spriteScreenX + halfSW; if (drawEndX >= W) drawEndX = W - 1;
 
@@ -628,6 +630,9 @@ function update(dt) {
   const cDt = dt < 0.1 ? dt : 0.1;
 
   player.angle += mouseDX * 0.003; mouseDX = 0;
+  player.pitch += mouseDY * 0.003; mouseDY = 0;
+  if (player.pitch > 0.8) player.pitch = 0.8;
+  if (player.pitch < -0.8) player.pitch = -0.8;
   if (keys['arrowleft'] || keys['q']) player.angle -= 3 * cDt;
   if (keys['arrowright'] || keys['e']) player.angle += 3 * cDt;
 
