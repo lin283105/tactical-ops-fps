@@ -156,7 +156,7 @@ function genZombie() {
   sx.fillStyle='#5a7a4e'; sx.fillRect(18,56,20,8); sx.fillRect(90,56,20,8); // arms reaching
   sx.fillStyle='#7a3a3a'; sx.fillRect(92,52,18,5); // bloody arm
   sx.fillStyle='#3a3a2a'; sx.fillRect(40,106,18,20); sx.fillRect(70,106,18,20); // legs
-  return sc.getImageData(0,0,SPR_W,SPR_H).data;
+  return sx.getImageData(0,0,SPR_W,SPR_H).data;
 }
 function genItem(type, c1, c2) {
   const sc=document.createElement('canvas'); sc.width=SPR_W; sc.height=SPR_H;
@@ -169,7 +169,7 @@ function genItem(type, c1, c2) {
     sx.fillRect(40,76,24,12); sx.fillRect(64,76,24,12);
     sx.fillStyle='#aa0'; sx.fillRect(50,36,12,14); sx.fillRect(66,36,12,14); sx.fillRect(50,56,12,14); sx.fillRect(66,56,12,14);
   }
-  return sc.getImageData(0,0,SPR_W,SPR_H).data;
+  return sx.getImageData(0,0,SPR_W,SPR_H).data;
 }
 zomTex.push(genZombie(), genZombie());
 itemTex.push(genItem('health'), genItem('ammo'));
